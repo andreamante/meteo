@@ -3,6 +3,7 @@ interface GeoResult {
   latitude: number;
   longitude: number;
   country?: string;
+  admin1?: string;
 }
 
 interface WeatherData {
@@ -23,6 +24,7 @@ interface WeatherData {
 
 const form = document.getElementById('search-form') as HTMLFormElement;
 const cityInput = document.getElementById('city-input') as HTMLInputElement;
+const suggestionsList = document.getElementById('suggestions-list') as HTMLElement;
 const statusMessage = document.getElementById('status-message') as HTMLElement;
 const weatherCard = document.getElementById('weather-card') as HTMLElement;
 
@@ -34,6 +36,8 @@ const apparentTemp = document.getElementById('apparent-temp') as HTMLElement;
 const humidity = document.getElementById('humidity') as HTMLElement;
 const windSpeed = document.getElementById('wind-speed') as HTMLElement;
 const forecastGrid = document.getElementById('forecast-grid') as HTMLElement;
+
+let debounceTimer: number;
 
 function getWeatherDetails(code: number): { desc: string; icon: string } {
   switch (code) {
@@ -71,16 +75,12 @@ function getWeatherDetails(code: number): { desc: string; icon: string } {
   }
 }
 
-async function searchCity(query: string): Promise<GeoResult | null> {
-  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=it&format=json`;
+async function fetchCitySuggestions(query: string): Promise<GeoResult[]> {
+  if (query.length < 2) return [];
+  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=it&format=json`;
   const response = await fetch(url);
   const data = await response.json();
-  
-  if (!data.results || data.results.length === 0) {
-    return null;
-  }
-  
-  return data.results[0];
+  return data.results || [];
 }
 
 async function fetchWeather(lat: number, lon: number): Promise<WeatherData> {
@@ -89,11 +89,11 @@ async function fetchWeather(lat: number, lon: number): Promise<WeatherData> {
   return await response.json();
 }
 
-function renderWeather(city: string, data: WeatherData) {
+function renderWeather(displayName: string, data: WeatherData) {
   const { current, daily } = data;
   const currentDetails = getWeatherDetails(current.weather_code);
 
-  cityName.textContent = city;
+  cityName.textContent = displayName;
   currentIcon.textContent = currentDetails.icon;
   currentTemp.textContent = `${Math.round(current.temperature_2m)}°C`;
   weatherDesc.textContent = currentDetails.desc;
@@ -123,30 +123,85 @@ function renderWeather(city: string, data: WeatherData) {
   weatherCard.classList.remove('hidden');
 }
 
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const city = cityInput.value.trim();
-  
-  if (!city) return;
+async function selectLocation(location: GeoResult) {
+  suggestionsList.classList.add('hidden');
+  const details = [location.admin1, location.country].filter(Boolean).join(', ');
+  const displayName = details ? `${location.name} (${details})` : location.name;
+  cityInput.value = location.name;
 
   statusMessage.textContent = 'Caricamento...';
   weatherCard.classList.add('hidden');
 
   try {
-    const location = await searchCity(city);
-    
-    if (!location) {
-      statusMessage.textContent = 'Città non trovata. Riprova.';
-      return;
-    }
-
     const weather = await fetchWeather(location.latitude, location.longitude);
-    const displayName = location.country ? `${location.name}, ${location.country}` : location.name;
-    
     renderWeather(displayName, weather);
     statusMessage.textContent = '';
   } catch (error) {
     console.error(error);
     statusMessage.textContent = 'Errore durante il recupero dei dati meteo.';
+  }
+}
+
+function renderSuggestions(locations: GeoResult[]) {
+  suggestionsList.innerHTML = '';
+
+  if (locations.length === 0) {
+    suggestionsList.classList.add('hidden');
+    return;
+  }
+
+  locations.forEach((loc) => {
+    const item = document.createElement('div');
+    item.className = 'suggestion-item';
+
+    const locationDetails = [loc.admin1, loc.country].filter(Boolean).join(', ');
+
+    item.innerHTML = `
+      <div class="suggestion-title">${loc.name}</div>
+      <div class="suggestion-location">${locationDetails || 'N/A'}</div>
+    `;
+
+    item.addEventListener('click', () => selectLocation(loc));
+    suggestionsList.appendChild(item);
+  });
+
+  suggestionsList.classList.remove('hidden');
+}
+
+cityInput.addEventListener('input', () => {
+  clearTimeout(debounceTimer);
+  const query = cityInput.value.trim();
+
+  if (query.length < 2) {
+    suggestionsList.classList.add('hidden');
+    return;
+  }
+
+  debounceTimer = window.setTimeout(async () => {
+    try {
+      const results = await fetchCitySuggestions(query);
+      renderSuggestions(results);
+    } catch (err) {
+      console.error(err);
+    }
+  }, 300);
+});
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const query = cityInput.value.trim();
+  if (!query) return;
+
+  const results = await fetchCitySuggestions(query);
+  if (results.length > 0) {
+    selectLocation(results[0]);
+  } else {
+    statusMessage.textContent = 'Città non trovata. Riprova.';
+  }
+});
+
+document.addEventListener('click', (e) => {
+  if (!form.contains(e.target as Node)) {
+    suggestionsList.classList.add('hidden');
   }
 });

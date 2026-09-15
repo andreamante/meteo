@@ -219,3 +219,55 @@ header {
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+.search-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.search-wrapper input {
+  width: 100%;
+}
+
+.suggestions-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: #161820;
+  border: 1px solid #2e3243;
+  border-radius: 8px;
+  margin-top: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 20;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6);
+}
+
+.suggestion-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #252836;
+  text-align: left;
+  transition: background-color 0.15s ease;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background-color: #252836;
+}
+
+.suggestion-title {
+  font-weight: 600;
+  color: #ffffff;
+  font-size: 0.95rem;
+}
+
+.suggestion-location {
+  font-size: 0.8rem;
+  color: #f4b41a;
+  margin-top: 2px;
+}

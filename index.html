@@ -15,8 +15,11 @@
       <p class="subtitle">Cerca una città e scopri le previsioni</p>
     </header>
 
-    <form id="search-form" class="search-form">
-      <input type="text" id="city-input" placeholder="Es. Busto Arsizio" required />
+    <form id="search-form" class="search-form" autocomplete="off">
+      <div class="search-wrapper">
+        <input type="text" id="city-input" placeholder="Es. Busto Arsizio" required />
+        <div id="suggestions-list" class="suggestions-list hidden"></div>
+      </div>
       <button type="submit" id="search-btn">Cerca</button>
     </form>
 

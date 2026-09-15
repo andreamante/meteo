@@ -1,1 +1,57 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meteo App</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <div class="logo-container">
+        <img src="img/meteomante_logo.png" alt="Logo Meteo" class="logo" />
+        <h1>Meteo App</h1>
+      </div>
+      <p class="subtitle">Cerca una città e scopri le previsioni</p>
+    </header>
 
+    <form id="search-form" class="search-form">
+      <input type="text" id="city-input" placeholder="Es. Busto Arsizio" required />
+      <button type="submit" id="search-btn">Cerca</button>
+    </form>
+
+    <div id="status-message" class="status-message"></div>
+    
+    <div id="weather-card" class="weather-card hidden">
+      <div class="current-weather">
+        <h2 id="city-name">--</h2>
+        <div class="main-temp">
+          <span id="current-icon">🌤️</span>
+          <span id="current-temp">--°</span>
+        </div>
+        <p id="weather-desc">--</p>
+
+        <div class="weather-details">
+          <div>
+            <span id="apparent-temp" class="value">--°</span>
+            <span class="label">Percepita</span>
+          </div>
+          <div>
+            <span id="humidity" class="value">--%</span>
+            <span class="label">Umidità</span>
+          </div>
+          <div>
+            <span id="wind-speed" class="value">-- km/h</span>
+            <span class="label">Vento</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="forecast-grid" class="forecast-grid"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
